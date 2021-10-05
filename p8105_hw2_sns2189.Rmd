@@ -13,3 +13,78 @@ library(readxl)
 library(haven)
 ```
 
+## Problem 1
+
+__Importing Mr. Trash Wheel dataset:__
+
+```{r}
+mrtrash_df <- 
+  read_excel(
+    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    sheet = "Mr. Trash Wheel",
+    range = "A2:N406"
+    ) %>% 
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(sports_balls = round(sports_balls,0))
+```
+
+__Importing precipitation datasets:__
+
+2018 dataset:
+
+```{r}
+prcp_2018 <-
+  read_excel(
+    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    sheet = "2018 Precipitation",
+    skip = 1
+  ) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month, total) %>% 
+  mutate(year = 2018)
+```
+
+2019 dataset:
+
+```{r}
+prcp_2019 <-
+  read_excel(
+    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    sheet = "2019 Precipitation",
+    skip = 1
+  ) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month, total) %>% 
+  mutate(year = 2019)
+```
+
+Combining and tidying the two prcp datasets:
+
+```{r}
+prcp_tidy <-
+  bind_rows(prcp_2018, prcp_2019) %>% 
+  mutate(month = month.name[month]) %>% 
+  select(year, month, prcp_amt = total)
+```
+
+__Describing the datasets:__
+
+
+There are `r nrow(prcp_tidy)` observations in the `prcp_tidy` dataset and `r nrow(mrtrash_df)` observations in the `mrtrash_df` dataset. The key variables in the `mrtrash_df` dataset are:
+
+* __dumpster identification__ (`r names(mrtrash_df)[1:4]`),
+
+* __amount of trash__ (`r names(mrtrash_df)[5:6]`),
+
+* __types of trash__ (`r names(mrtrash_df)[7:13]`), and
+
+* __number of homes powered__ (`r names(mrtrash_df)[14]`)
+
+The key variables in the `prcp_tidy` dataset are:
+
+* __`r names(prcp_tidy)[1:2]`__ and
+
+* __precipitation amount__.
+
+For available data, the total precipitation in 2018 was `r sum(pull(prcp_2018, total))` inches. The median number of sports balls in a dumpster in 2019 was `r median(pull(mrtrash_df, sports_balls))`.
