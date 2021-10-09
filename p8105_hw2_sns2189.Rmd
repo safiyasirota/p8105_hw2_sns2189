@@ -10,7 +10,12 @@ output:
 ```{r, echo = FALSE, message = FALSE}
 library(tidyverse)
 library(readxl)
-library(haven)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = 0.6,
+  out.width = "90%"
+)
 ```
 
 ## Problem 1
@@ -20,7 +25,7 @@ __Importing Mr. Trash Wheel dataset:__
 ```{r}
 mrtrash_df <- 
   read_excel(
-    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    "./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
     sheet = "Mr. Trash Wheel",
     range = "A2:N406"
     ) %>% 
@@ -36,7 +41,7 @@ __Importing precipitation datasets:__
 ```{r}
 prcp_2018 <-
   read_excel(
-    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    "./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
     sheet = "2018 Precipitation",
     skip = 1
   ) %>% 
@@ -50,7 +55,7 @@ prcp_2018 <-
 ```{r}
 prcp_2019 <-
   read_excel(
-    "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
+    "./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx",
     sheet = "2019 Precipitation",
     skip = 1
   ) %>% 
@@ -144,4 +149,80 @@ five38_df <-
 ```
 
 __Desribing the datasets:__
+
+
+## Problem 3
+
+__Importing and tidying `popular_baby_names` dataset:__
+
+```{r}
+names_df <- read_csv("./data/Popular_Baby_Names.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    gender = str_to_title(gender),
+    ethnicity = str_to_title(ethnicity),
+    childs_first_name = str_to_title(childs_first_name),
+    ethnicity = recode(ethnicity, 
+                       "Asian And Paci" = "Asian And Pacific Islander",
+                       "Black Non Hisp" = "Black Non Hispanic",
+                       "White Non Hisp" = "White Non Hispanic")
+  ) %>% 
+  distinct(year_of_birth, rank, ethnicity, childs_first_name, .keep_all = TRUE)
+```
+
+The case structure of `childs_first_name` was inconsistent throughout the data, but we were able to fix this with the `str_to_title` function.  
+
+We could also see that the values of `ethnicity` were not consistent throughout the dataset, with API, non-hispanic black, and non-hispanic white indicators changing throughout. We were able to fix this by recoding the ethnicity variable values.  
+
+Lastly, we needed to get rid of duplicates. The `distinct()` function is useful for this.
+
+__Creating a readable `olivia` table__:
+
+```{r}
+olivia <- 
+  filter(names_df, 
+         childs_first_name == "Olivia" 
+         & gender == "Female") %>% 
+  select(ethnicity, rank, year_of_birth) %>% 
+  pivot_wider(
+    names_from = "year_of_birth",
+    values_from = "rank"
+  )
+```
+
+__Creating a readable table for the most popular male name__:
+
+First, we should determine the most popular male name over time. I will define this as the male name with highest count across all years in the dataset. We can make a table to help:
+
+```{r}
+pop_name <-
+  filter(names_df, gender == "Male") %>% 
+  select(childs_first_name, count) %>% 
+  group_by(childs_first_name) %>% 
+  summarize_all(sum) %>% 
+  arrange(desc(count))
+```
+
+We find that the most popular male name is Ethan, so now we will make an `ethan` table.
+
+```{r}
+ethan <- 
+  filter(names_df, 
+         childs_first_name == "Ethan" 
+         & gender == "Male") %>% 
+  select(ethnicity, rank, year_of_birth) %>% 
+  pivot_wider(
+    names_from = "year_of_birth",
+    values_from = "rank"
+  )
+```
+
+__Making a scatterplot of `rank` vs. `count`:__
+
+```{r}
+names_df %>% 
+  filter(gender == "Male" & ethnicity == "White Non Hispanic") %>% 
+  ggplot(aes(x = rank, y = count)) +
+  geom_point()
+```
 
