@@ -88,3 +88,60 @@ The key variables in the `prcp_tidy` dataset are:
 * __precipitation amount__.
 
 For available data, the total precipitation in 2018 was `r sum(pull(prcp_2018, total))` inches. The median number of sports balls in a dumpster in 2019 was `r median(pull(mrtrash_df, sports_balls))`.
+
+## Problem 2
+
+__Importing and cleaning `pols-month` dataset:__
+
+```{r}
+pols_df <- read_csv("./data/fivethirtyeight_datasets/pols-month.csv") %>% 
+  separate(mon, into = c("year", "month", "day"), sep = "-") %>% 
+  mutate(
+    year = as.numeric(year), 
+    month = month.name[as.numeric(month)],
+    day = as.numeric(day),
+    president = case_when(
+      prez_gop == 1 ~ "gop",
+      prez_dem == 1 ~ "dem")
+    ) %>% 
+  select(-prez_gop, -prez_dem, -day)
+```
+
+__Importing and cleaning `snp` dataset:__
+
+```{r}
+snp_df <- read_csv("./data/fivethirtyeight_datasets/snp.csv") %>% 
+  separate(date, into = c("month", "day", "year"), sep = "/") %>% 
+  mutate(
+    year = case_when(
+      year < 22 ~ 2000 + as.numeric(year), 
+      year > 22 ~ 1900 + as.numeric(year)
+    ),
+    month = month.name[as.numeric(month)],
+    day = as.numeric(day)
+  ) %>% 
+  select(year, month, close)
+```
+
+__Importing and cleaning `unemployment` dataset:__
+
+```{r}
+unemploy_df <- read_csv("./data/fivethirtyeight_datasets/unemployment.csv") %>% 
+  pivot_longer(
+    Jan:Dec,
+    names_to = "month",
+    values_to = "unemp_pct"
+  ) %>% 
+  mutate(month = month.name[match(month, month.abb)]) %>% 
+  rename(year = Year)
+```
+
+__Joining all three datesets:___
+```{r}
+five38_df <-
+  full_join(pols_df, snp_df, by = c("year", "month")) %>% 
+  full_join(unemploy_df,by = c("year", "month"))
+```
+
+__Desribing the datasets:__
+
