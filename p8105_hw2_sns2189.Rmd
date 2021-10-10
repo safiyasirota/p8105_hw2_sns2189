@@ -141,15 +141,17 @@ unemploy_df <- read_csv("./data/fivethirtyeight_datasets/unemployment.csv") %>%
   rename(year = Year)
 ```
 
-__Joining all three datesets:___
+__Joining all three datasets:___
+
 ```{r}
-five38_df <-
+five38_tidy <-
   full_join(pols_df, snp_df, by = c("year", "month")) %>% 
   full_join(unemploy_df,by = c("year", "month"))
 ```
 
 __Desribing the datasets:__
 
+There are `r nrow(five38_tidy)` observations and `r ncol(five38_tidy)` variables in the `five38_tidy` dataset. This dataset is the union of `pols_df`, `snp_df`, and `unemploy_df`. `pols_df` contains information on whether national politicians at certain dates are democrats or republicans (e.g., variable `president`). `snp_df` contains the closing values (variable `close`) of the S&P stock index for a range of dates. `unemploy_df` shows snapshots of unemployment rates (variable `unemp_pct`) throughout time. The rows represent each year/month combination from January 1947 to December 2015, although politician, S&P, and unemployment data may not *all* be available for each entry throughout the dataset. 
 
 ## Problem 3
 
@@ -172,7 +174,7 @@ names_df <- read_csv("./data/Popular_Baby_Names.csv") %>%
 
 The case structure of `childs_first_name` was inconsistent throughout the data, but we were able to fix this with the `str_to_title` function.  
 
-We could also see that the values of `ethnicity` were not consistent throughout the dataset, with API, non-hispanic black, and non-hispanic white indicators changing throughout. We were able to fix this by recoding the ethnicity variable values.  
+We could also see that the values of `ethnicity` were not consistent throughout the dataset. API, non-hispanic black, and non-hispanic white indicators change throughout. We were able to fix this by recoding the `ethnicity` values.  
 
 Lastly, we needed to get rid of duplicates. The `distinct()` function is useful for this.
 
@@ -188,6 +190,8 @@ olivia <-
     names_from = "year_of_birth",
     values_from = "rank"
   )
+
+print(olivia)
 ```
 
 __Creating a readable table for the most popular male name__:
@@ -215,14 +219,19 @@ ethan <-
     names_from = "year_of_birth",
     values_from = "rank"
   )
+
+print(ethan)
 ```
 
 __Making a scatterplot of `rank` vs. `count`:__
 
 ```{r}
 names_df %>% 
-  filter(gender == "Male" & ethnicity == "White Non Hispanic") %>% 
+  filter(gender == "Male" 
+         & ethnicity == "White Non Hispanic"
+         & year_of_birth == 2016
+         ) %>% 
   ggplot(aes(x = rank, y = count)) +
-  geom_point()
+  geom_point(alpha = 0.5) +
+  ggtitle("Non-Hispanic White Male Names in 2016: Rank vs. Count")
 ```
-
